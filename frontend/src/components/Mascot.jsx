@@ -88,13 +88,15 @@ function Mascot({ settings }) {
     readingElRef.current = null
   }, [])
 
+  const hasMoved = useRef(false)
+
   const handlePointerDown = useCallback((e) => {
     e.preventDefault()
     setDragging(true)
     setSpeech('')
-    stopReading()
+    hasMoved.current = false
     dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y }
-  }, [pos, stopReading])
+  }, [pos])
 
   useEffect(() => {
     if (!dragging) return
@@ -104,7 +106,13 @@ function Mascot({ settings }) {
       const dy = e.clientY - dragRef.current.startY
       setPos({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy })
 
-      // Detect message bubbles under mascot center
+      if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return
+
+      if (!hasMoved.current) {
+        hasMoved.current = true
+        stopReading()
+      }
+
       const els = document.elementsFromPoint(e.clientX, e.clientY)
       const bubble = els.find((el) => el.classList.contains('bubble'))
 
@@ -134,7 +142,6 @@ function Mascot({ settings }) {
 
     const handleUp = () => {
       setDragging(false)
-      stopReading()
     }
 
     window.addEventListener('pointermove', handleMove)
@@ -146,6 +153,7 @@ function Mascot({ settings }) {
   }, [dragging, speechLang, stopReading])
 
   const handleClick = useCallback(() => {
+    if (hasMoved.current || reading) return
     setClicked(true)
     setTimeout(() => setClicked(false), 400)
     const newSparkles = Array.from({ length: 8 }, (_, i) => ({
@@ -159,7 +167,7 @@ function Mascot({ settings }) {
     setSpeech(msg)
     clearTimeout(speechTimer.current)
     speechTimer.current = setTimeout(() => setSpeech(''), 2200)
-  }, [])
+  }, [reading])
 
   if (!visible) return null
 
