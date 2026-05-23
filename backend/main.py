@@ -8,7 +8,11 @@ app = FastAPI(title="AI Chat Assistant")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "https://tree-s-ai-chat.vercel.app",
+        "https://tree-s-ai-chat.vercel.app/",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
