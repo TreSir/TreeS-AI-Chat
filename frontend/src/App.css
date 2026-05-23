@@ -291,6 +291,12 @@ body {
   gap: 10px;
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .app-header h1 {
   font-size: 15px;
   font-weight: 600;
@@ -311,6 +317,12 @@ body {
 .persona-badge {
   background: rgba(168, 85, 247, 0.10);
   color: #a78bfa;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.persona-badge:hover {
+  background: rgba(168, 85, 247, 0.20);
 }
 
 .btn-clear {
@@ -327,6 +339,27 @@ body {
 
 .btn-clear:hover {
   background: var(--bg-hover);
+  color: var(--text);
+}
+
+.btn-header-icon {
+  width: 28px;
+  height: 28px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.btn-header-icon:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
   color: var(--text);
 }
 
