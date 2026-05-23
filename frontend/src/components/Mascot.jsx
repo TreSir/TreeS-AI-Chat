@@ -1,37 +1,52 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 
 const MESSAGES = [
-  '你好呀！',
-  '我在呢~',
-  '有什么想问的吗？',
-  '嘿嘿~',
-  '戳我干嘛！',
-  '❤',
-  '✨',
-  '今天天气真好~',
+  '你好呀！', '我在呢~', '有什么想问的吗？', '嘿嘿~', '戳我干嘛！', '❤', '✨', '今天天气真好~',
 ]
 
 const COLOR_MAP = {
-  violet: 'linear-gradient(135deg, #818cf8 0%, #6366f1 40%, #4f46e5 100%)',
-  pink: 'linear-gradient(135deg, #f9a8d4 0%, #f472b6 40%, #ec4899 100%)',
-  blue: 'linear-gradient(135deg, #7dd3fc 0%, #38bdf8 40%, #0ea5e9 100%)',
-  green: 'linear-gradient(135deg, #86efac 0%, #4ade80 40%, #22c55e 100%)',
-  orange: 'linear-gradient(135deg, #fdba74 0%, #fb923c 40%, #f97316 100%)',
-  dark: 'linear-gradient(135deg, #64748b 0%, #475569 40%, #334155 100%)',
+  violet: 'linear-gradient(135deg, #a5b4fc 0%, #818cf8 30%, #6366f1 100%)',
+  pink: 'linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 30%, #f472b6 100%)',
+  blue: 'linear-gradient(135deg, #bae6fd 0%, #7dd3fc 30%, #38bdf8 100%)',
+  green: 'linear-gradient(135deg, #bbf7d0 0%, #86efac 30%, #4ade80 100%)',
+  orange: 'linear-gradient(135deg, #fed7aa 0%, #fdba74 30%, #fb923c 100%)',
+  dark: 'linear-gradient(135deg, #94a3b8 0%, #64748b 30%, #475569 100%)',
+  sunset: 'linear-gradient(135deg, #fbbf24 0%, #fb923c 40%, #f472b6 100%)',
+  ocean: 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 50%, #6366f1 100%)',
+  aurora: 'linear-gradient(135deg, #34d399 0%, #818cf8 50%, #c084fc 100%)',
+  rosegold: 'linear-gradient(135deg, #fda4af 0%, #fb7185 40%, #fbbf24 100%)',
+  galaxy: 'linear-gradient(135deg, #6366f1 0%, #a855f7 40%, #ec4899 100%)',
+  forest: 'linear-gradient(135deg, #86efac 0%, #22c55e 30%, #0d9488 100%)',
+  rainbow: 'linear-gradient(135deg, #fca5a5 0%, #fde047 25%, #86efac 50%, #7dd3fc 75%, #c084fc 100%)',
 }
 
 const SHAPE_MAP = {
   blob: '50% 50% 50% 50% / 40% 40% 60% 60%',
   cat: '50% 50% 50% 50% / 55% 55% 45% 45%',
   round: '50%',
-  soft: '45% 55% 55% 45% / 55% 50% 50% 45%',
+  egg: '45% 45% 55% 55% / 55% 55% 45% 45%',
+  drop: '50% 0 50% 50% / 30% 0 70% 70%',
+  soft: '40% 60% 55% 45% / 55% 45% 50% 50%',
+  cloud: '55% 55% 30% 30% / 65% 65% 35% 35%',
+  bean: '60% 40% 50% 50% / 40% 40% 60% 60%',
+  square: '22%',
+  pill: '99px',
 }
 
 const SIZE_MAP = { sm: 0.75, md: 1, lg: 1.35 }
 
+function earColor(c) {
+  if (c === 'pink') return '#f472b6'
+  if (c === 'blue') return '#38bdf8'
+  if (c === 'green') return '#4ade80'
+  if (c === 'orange') return '#fb923c'
+  if (c === 'dark') return '#64748b'
+  return '#818cf8'
+}
+
 function Mascot({ settings }) {
   const { color, shape, size, visible } = settings
-  const baseSize = 56 * SIZE_MAP[size] || SIZE_MAP.md * 56
+  const baseSize = 56 * (SIZE_MAP[size] || 1)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [clicked, setClicked] = useState(false)
@@ -42,18 +57,13 @@ function Mascot({ settings }) {
   const speechTimer = useRef(null)
   const initRef = useRef(false)
   const isCat = shape === 'cat'
-  const earColor = color === 'pink' ? '#f472b6' : color === 'blue' ? '#38bdf8' : color === 'green' ? '#4ade80' : color === 'orange' ? '#fb923c' : color === 'dark' ? '#475569' : '#818cf8'
 
   useEffect(() => {
     if (initRef.current) return
     initRef.current = true
-    setPos({
-      x: window.innerWidth - 100,
-      y: window.innerHeight - 200,
-    })
+    setPos({ x: window.innerWidth - 100, y: window.innerHeight - 200 })
   }, [])
 
-  // Eye tracking
   useEffect(() => {
     const handleMouse = (e) => {
       eyesRef.current.forEach((el) => {
@@ -74,12 +84,7 @@ function Mascot({ settings }) {
     e.preventDefault()
     setDragging(true)
     setSpeech('')
-    dragRef.current = {
-      startX: e.clientX,
-      startY: e.clientY,
-      origX: pos.x,
-      origY: pos.y,
-    }
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y }
   }, [pos])
 
   useEffect(() => {
@@ -101,7 +106,6 @@ function Mascot({ settings }) {
   const handleClick = useCallback(() => {
     setClicked(true)
     setTimeout(() => setClicked(false), 400)
-
     const newSparkles = Array.from({ length: 8 }, (_, i) => ({
       id: Date.now() + i,
       angle: (i / 8) * 360,
@@ -109,7 +113,6 @@ function Mascot({ settings }) {
     }))
     setSparkles((prev) => [...prev, ...newSparkles])
     setTimeout(() => setSparkles((prev) => prev.filter((s) => !newSparkles.includes(s))), 600)
-
     const msg = MESSAGES[Math.floor(Math.random() * MESSAGES.length)]
     setSpeech(msg)
     clearTimeout(speechTimer.current)
@@ -124,11 +127,7 @@ function Mascot({ settings }) {
       style={{ left: pos.x, top: pos.y }}
     >
       {sparkles.map((s) => (
-        <div
-          key={s.id}
-          className="sparkle"
-          style={{ '--angle': `${s.angle}deg`, '--color': s.color }}
-        />
+        <div key={s.id} className="sparkle" style={{ '--angle': `${s.angle}deg`, '--color': s.color }} />
       ))}
 
       {speech && (
@@ -143,11 +142,10 @@ function Mascot({ settings }) {
         onPointerDown={handlePointerDown}
         onClick={handleClick}
       >
-        {/* Cat ears */}
         {isCat && (
           <div className="cat-ears">
-            <div className="cat-ear left" style={{ borderBottomColor: earColor }} />
-            <div className="cat-ear right" style={{ borderBottomColor: earColor }} />
+            <div className="cat-ear left" style={{ borderBottomColor: earColor(color) }} />
+            <div className="cat-ear right" style={{ borderBottomColor: earColor(color) }} />
           </div>
         )}
 
@@ -164,7 +162,7 @@ function Mascot({ settings }) {
             <div className="mascot-eye left" style={{ width: baseSize * 0.18, height: baseSize * 0.20 }}>
               <div className="mascot-pupil" style={{ width: baseSize * 0.09, height: baseSize * 0.11 }} ref={(el) => (eyesRef.current[0] = el)} />
             </div>
-            <div className={`mascot-eye right ${isCat ? 'cat-eye' : ''}`} style={{ width: baseSize * 0.18, height: baseSize * 0.20 }}>
+            <div className="mascot-eye right" style={{ width: baseSize * 0.18, height: baseSize * 0.20 }}>
               <div className="mascot-pupil" style={{ width: baseSize * 0.09, height: baseSize * 0.11 }} ref={(el) => (eyesRef.current[1] = el)} />
             </div>
           </div>
