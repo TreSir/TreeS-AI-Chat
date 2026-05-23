@@ -3,11 +3,22 @@ import ChatWindow from './components/ChatWindow'
 import ChatInput from './components/ChatInput'
 import Sidebar from './components/Sidebar'
 import SettingsModal from './components/SettingsModal'
+import MascotSettings from './components/MascotSettings'
 import Mascot from './components/Mascot'
 import { createChatSender } from './api'
 import { loadSessions, saveSessions, loadActiveId, saveActiveId, loadTheme, saveTheme } from './utils/storage'
 
 const sender = createChatSender()
+
+const DEFAULT_MASCOT = { visible: true, color: 'violet', shape: 'blob', size: 'md' }
+
+function loadMascot() {
+  try {
+    const raw = localStorage.getItem('ai-chat-mascot')
+    return raw ? { ...DEFAULT_MASCOT, ...JSON.parse(raw) } : DEFAULT_MASCOT
+  } catch { return DEFAULT_MASCOT }
+}
+function saveMascot(s) { localStorage.setItem('ai-chat-mascot', JSON.stringify(s)) }
 
 function createSession() {
   return {
@@ -24,7 +35,9 @@ function App() {
   const [activeId, setActiveId] = useState(() => loadActiveId())
   const [streaming, setStreaming] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [showMascotSettings, setShowMascotSettings] = useState(false)
   const [theme, setTheme] = useState(() => loadTheme())
+  const [mascot, setMascot] = useState(() => loadMascot())
   const sidebarOpenRef = useRef(true)
 
   useEffect(() => {
@@ -39,6 +52,10 @@ function App() {
     saveTheme(theme)
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    saveMascot(mascot)
+  }, [mascot])
 
   const activeSession = sessions.find((s) => s.id === activeId) || null
 
@@ -153,6 +170,7 @@ function App() {
         onNew={handleNewChat}
         onDelete={handleDeleteSession}
         onToggleSettings={() => setShowSettings(true)}
+        onToggleMascot={() => setShowMascotSettings(true)}
         theme={theme}
         onToggleTheme={handleToggleTheme}
       />
@@ -185,7 +203,7 @@ function App() {
           streaming={streaming}
         />
 
-        <Mascot />
+        <Mascot settings={mascot} />
 
         <ChatInput
           onSend={handleSend}
@@ -200,6 +218,14 @@ function App() {
           currentPrompt={activeSession?.systemPrompt || ''}
           onSave={handleSaveSystemPrompt}
           onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showMascotSettings && (
+        <MascotSettings
+          settings={mascot}
+          onChange={setMascot}
+          onClose={() => setShowMascotSettings(false)}
         />
       )}
     </div>

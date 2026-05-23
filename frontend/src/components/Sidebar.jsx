@@ -1,4 +1,4 @@
-function Sidebar({ sessions, activeId, onSelect, onNew, onDelete, onToggleSettings, theme, onToggleTheme }) {
+function Sidebar({ sessions, activeId, onSelect, onNew, onDelete, onToggleSettings, onToggleMascot, theme, onToggleTheme }) {
   return (
     <aside className="sidebar">
       <button className="btn-new-chat" onClick={onNew}>
@@ -26,6 +26,9 @@ function Sidebar({ sessions, activeId, onSelect, onNew, onDelete, onToggleSettin
       <div className="sidebar-footer">
         <button className="btn-sidebar-action" onClick={onToggleSettings}>
           人设配置
+        </button>
+        <button className="btn-sidebar-action" onClick={onToggleMascot}>
+          精灵设置
         </button>
         <button className="btn-sidebar-action" onClick={onToggleTheme}>
           {theme === 'dark' ? '切换亮色' : '切换暗色'}
