@@ -82,10 +82,11 @@ function Mascot({ settings }) {
     return () => window.removeEventListener('mousemove', handleMouse)
   }, [])
 
+  const readingRef = useRef(false)
   const stopReading = useCallback(() => {
     window.speechSynthesis.cancel()
     setReading(false)
-    readingElRef.current = null
+    readingRef.current = false
   }, [])
 
   const hasMoved = useRef(false)
@@ -110,7 +111,9 @@ function Mascot({ settings }) {
 
       if (!hasMoved.current) {
         hasMoved.current = true
-        stopReading()
+        if (readingRef.current) {
+          stopReading()
+        }
       }
 
       const els = document.elementsFromPoint(e.clientX, e.clientY)
@@ -121,21 +124,24 @@ function Mascot({ settings }) {
         if (text) {
           window.speechSynthesis.cancel()
           readingElRef.current = bubble
+          readingRef.current = true
           setReading(true)
           const utterance = new SpeechSynthesisUtterance(text)
           utterance.lang = speechLang || 'zh-CN'
           utterance.rate = 1
           utterance.onend = () => {
             readingElRef.current = null
+            readingRef.current = false
             setReading(false)
           }
           utterance.onerror = () => {
             readingElRef.current = null
+            readingRef.current = false
             setReading(false)
           }
           window.speechSynthesis.speak(utterance)
         }
-      } else if (!bubble && readingElRef.current) {
+      } else if (!bubble && readingRef.current) {
         stopReading()
       }
     }
