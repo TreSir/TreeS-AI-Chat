@@ -79,7 +79,61 @@ body {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  padding: 16px 12px;
+  padding: 12px 10px;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 56px;
+  padding: 12px 8px;
+}
+
+/* Collapse toggle */
+.btn-collapse {
+  width: 30px;
+  height: 30px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  margin-bottom: 8px;
+  align-self: flex-end;
+}
+
+.sidebar.collapsed .btn-collapse {
+  align-self: center;
+}
+
+.btn-collapse:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Icon-only button (collapsed) */
+.btn-icon-only {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  margin: 0 auto 8px;
+}
+
+.btn-icon-only:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent);
 }
 
 .btn-new-chat {
@@ -94,6 +148,7 @@ body {
   transition: all var(--transition);
   margin-bottom: 12px;
   letter-spacing: -0.01em;
+  text-align: center;
 }
 
 .btn-new-chat:hover {
@@ -164,29 +219,51 @@ body {
 .btn-delete-session:hover { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
 
 .sidebar-footer {
-  padding-top: 12px;
+  padding-top: 10px;
   border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 
 .btn-sidebar-action {
-  padding: 8px 12px;
+  padding: 8px 10px;
   border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-secondary);
   font-size: 13px;
   cursor: pointer;
-  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   transition: all var(--transition);
   letter-spacing: -0.01em;
+  width: 100%;
 }
 
 .btn-sidebar-action:hover {
   background: var(--bg-hover);
   color: var(--text);
+}
+
+.btn-sidebar-action svg {
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  transition: color var(--transition);
+}
+
+.btn-sidebar-action:hover svg {
+  color: var(--text);
+}
+
+.sidebar.collapsed .btn-sidebar-action {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  align-items: center;
 }
 
 /* ===== Main ===== */

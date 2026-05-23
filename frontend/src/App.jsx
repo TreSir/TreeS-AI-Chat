@@ -38,7 +38,7 @@ function App() {
   const [showMascotSettings, setShowMascotSettings] = useState(false)
   const [theme, setTheme] = useState(() => loadTheme())
   const [mascot, setMascot] = useState(() => loadMascot())
-  const sidebarOpenRef = useRef(true)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     saveSessions(sessions)
@@ -166,6 +166,8 @@ function App() {
       <Sidebar
         sessions={sessions}
         activeId={activeId}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed((c) => !c)}
         onSelect={handleSelectSession}
         onNew={handleNewChat}
         onDelete={handleDeleteSession}
