@@ -198,7 +198,6 @@ function App() {
             <h1>{activeSession?.systemPrompt ? getPersonaName(activeSession.systemPrompt) : 'AI Chat'}</h1>
           </div>
           <div className="header-right">
-            <span className="badge">DeepSeek</span>
             {activeSession?.systemPrompt && (
               <span
                 className="badge persona-badge"
