@@ -45,17 +45,19 @@ function earColor(c) {
 }
 
 function Mascot({ settings }) {
-  const { color, shape, size, visible } = settings
+  const { color, shape, size, visible, speechLang } = settings
   const baseSize = 56 * (SIZE_MAP[size] || 1)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [clicked, setClicked] = useState(false)
   const [sparkles, setSparkles] = useState([])
   const [speech, setSpeech] = useState('')
+  const [reading, setReading] = useState(false)
   const eyesRef = useRef([])
   const dragRef = useRef({ startX: 0, startY: 0, origX: 0, origY: 0 })
   const speechTimer = useRef(null)
   const initRef = useRef(false)
+  const readingElRef = useRef(null)
   const isCat = shape === 'cat'
 
   useEffect(() => {
@@ -80,28 +82,68 @@ function Mascot({ settings }) {
     return () => window.removeEventListener('mousemove', handleMouse)
   }, [])
 
+  const stopReading = useCallback(() => {
+    window.speechSynthesis.cancel()
+    setReading(false)
+    readingElRef.current = null
+  }, [])
+
   const handlePointerDown = useCallback((e) => {
     e.preventDefault()
     setDragging(true)
     setSpeech('')
+    stopReading()
     dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y }
-  }, [pos])
+  }, [pos, stopReading])
 
   useEffect(() => {
     if (!dragging) return
+
     const handleMove = (e) => {
       const dx = e.clientX - dragRef.current.startX
       const dy = e.clientY - dragRef.current.startY
       setPos({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy })
+
+      // Detect message bubbles under mascot center
+      const els = document.elementsFromPoint(e.clientX, e.clientY)
+      const bubble = els.find((el) => el.classList.contains('bubble'))
+
+      if (bubble && bubble !== readingElRef.current) {
+        const text = bubble.textContent.trim()
+        if (text) {
+          window.speechSynthesis.cancel()
+          readingElRef.current = bubble
+          setReading(true)
+          const utterance = new SpeechSynthesisUtterance(text)
+          utterance.lang = speechLang || 'zh-CN'
+          utterance.rate = 1
+          utterance.onend = () => {
+            readingElRef.current = null
+            setReading(false)
+          }
+          utterance.onerror = () => {
+            readingElRef.current = null
+            setReading(false)
+          }
+          window.speechSynthesis.speak(utterance)
+        }
+      } else if (!bubble && readingElRef.current) {
+        stopReading()
+      }
     }
-    const handleUp = () => setDragging(false)
+
+    const handleUp = () => {
+      setDragging(false)
+      stopReading()
+    }
+
     window.addEventListener('pointermove', handleMove)
     window.addEventListener('pointerup', handleUp)
     return () => {
       window.removeEventListener('pointermove', handleMove)
       window.removeEventListener('pointerup', handleUp)
     }
-  }, [dragging])
+  }, [dragging, speechLang, stopReading])
 
   const handleClick = useCallback(() => {
     setClicked(true)
@@ -123,14 +165,21 @@ function Mascot({ settings }) {
 
   return (
     <div
-      className={`mascot-wrap ${dragging ? 'dragging' : ''} ${clicked ? 'bounced' : ''}`}
+      className={`mascot-wrap ${dragging ? 'dragging' : ''} ${clicked ? 'bounced' : ''} ${reading ? 'reading' : ''}`}
       style={{ left: pos.x, top: pos.y }}
     >
       {sparkles.map((s) => (
         <div key={s.id} className="sparkle" style={{ '--angle': `${s.angle}deg`, '--color': s.color }} />
       ))}
 
-      {speech && (
+      {reading && (
+        <div className="mascot-speech reading-speech">
+          朗读中 🔊
+          <div className="mascot-speech-tail" />
+        </div>
+      )}
+
+      {speech && !reading && (
         <div className="mascot-speech">
           {speech}
           <div className="mascot-speech-tail" />

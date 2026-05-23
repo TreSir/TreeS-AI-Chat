@@ -11,7 +11,7 @@ import { loadSessions, saveSessions, loadActiveId, saveActiveId, loadTheme, save
 
 const sender = createChatSender()
 
-const DEFAULT_MASCOT = { visible: true, color: 'violet', shape: 'blob', size: 'md' }
+const DEFAULT_MASCOT = { visible: true, color: 'violet', shape: 'blob', size: 'md', speechLang: 'zh-CN' }
 
 function loadMascot() {
   try {

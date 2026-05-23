@@ -33,6 +33,19 @@ const SIZES = [
   { label: '大', value: 'lg', scale: 1.35 },
 ]
 
+const LANGS = [
+  { label: '中文', value: 'zh-CN' },
+  { label: 'English', value: 'en-US' },
+  { label: '日本語', value: 'ja-JP' },
+  { label: '한국어', value: 'ko-KR' },
+  { label: 'Français', value: 'fr-FR' },
+  { label: 'Deutsch', value: 'de-DE' },
+  { label: 'Español', value: 'es-ES' },
+  { label: 'Italiano', value: 'it-IT' },
+  { label: 'Português', value: 'pt-BR' },
+  { label: 'Русский', value: 'ru-RU' },
+]
+
 function PreviewMascot({ color, shape, size }) {
   const s = SHAPES.find((x) => x.value === shape) || SHAPES[0]
   const c = COLORS.find((x) => x.value === color) || COLORS[0]
@@ -160,6 +173,22 @@ function MascotSettings({ settings, onChange, onClose }) {
                     background: 'linear-gradient(135deg, #818cf8, #6366f1)',
                   }}
                 />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Speech Language */}
+        <div className="setting-section">
+          <span className="setting-label">朗读语言 — 将精灵拖到消息上即可朗读</span>
+          <div className="lang-grid">
+            {LANGS.map((l) => (
+              <button
+                key={l.value}
+                className={`lang-chip ${settings.speechLang === l.value ? 'active' : ''}`}
+                onClick={() => set('speechLang', l.value)}
+              >
+                {l.label}
               </button>
             ))}
           </div>
