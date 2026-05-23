@@ -180,7 +180,7 @@ function MascotSettings({ settings, onChange, onClose }) {
 
         {/* Speech Language */}
         <div className="setting-section">
-          <span className="setting-label">朗读语言 — 将精灵拖到消息上即可朗读</span>
+          <span className="setting-label">精灵语言</span>
           <div className="lang-grid">
             {LANGS.map((l) => (
               <button
