@@ -3,6 +3,7 @@ import ChatWindow from './components/ChatWindow'
 import ChatInput from './components/ChatInput'
 import Sidebar from './components/Sidebar'
 import SettingsModal from './components/SettingsModal'
+import Mascot from './components/Mascot'
 import { createChatSender } from './api'
 import { loadSessions, saveSessions, loadActiveId, saveActiveId, loadTheme, saveTheme } from './utils/storage'
 
@@ -183,6 +184,8 @@ function App() {
           onRegenerate={handleRegenerate}
           streaming={streaming}
         />
+
+        <Mascot />
 
         <ChatInput
           onSend={handleSend}
