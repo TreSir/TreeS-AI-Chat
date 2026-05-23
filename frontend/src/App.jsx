@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar'
 import SettingsModal from './components/SettingsModal'
 import MascotSettings from './components/MascotSettings'
 import Mascot from './components/Mascot'
+import PromptLibrary from './components/PromptLibrary'
 import { createChatSender } from './api'
 import { loadSessions, saveSessions, loadActiveId, saveActiveId, loadTheme, saveTheme } from './utils/storage'
 
@@ -19,6 +20,14 @@ function loadMascot() {
   } catch { return DEFAULT_MASCOT }
 }
 function saveMascot(s) { localStorage.setItem('ai-chat-mascot', JSON.stringify(s)) }
+
+function loadPrompts() {
+  try {
+    const raw = localStorage.getItem('ai-chat-prompts')
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+function savePrompts(p) { localStorage.setItem('ai-chat-prompts', JSON.stringify(p)) }
 
 const PRESETS = [
   { label: '默认', prompt: '' },
@@ -54,6 +63,8 @@ function App() {
   const [theme, setTheme] = useState(() => loadTheme())
   const [mascot, setMascot] = useState(() => loadMascot())
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [prompts, setPrompts] = useState(() => loadPrompts())
+  const [showPromptLib, setShowPromptLib] = useState(false)
 
   useEffect(() => {
     saveSessions(sessions)
@@ -71,6 +82,10 @@ function App() {
   useEffect(() => {
     saveMascot(mascot)
   }, [mascot])
+
+  useEffect(() => {
+    savePrompts(prompts)
+  }, [prompts])
 
   const activeSession = sessions.find((s) => s.id === activeId) || null
 
@@ -176,6 +191,22 @@ function App() {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
   }
 
+  const handleSavePrompt = (prompt) => {
+    setPrompts((prev) => {
+      const idx = prev.findIndex((p) => p.id === prompt.id)
+      if (idx >= 0) {
+        const next = [...prev]
+        next[idx] = prompt
+        return next
+      }
+      return [prompt, ...prev]
+    })
+  }
+
+  const handleDeletePrompt = (id) => {
+    setPrompts((prev) => prev.filter((p) => p.id !== id))
+  }
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -188,6 +219,7 @@ function App() {
         onDelete={handleDeleteSession}
         onToggleSettings={() => setShowSettings(true)}
         onToggleMascot={() => setShowMascotSettings(true)}
+        onTogglePromptLib={() => setShowPromptLib(true)}
         theme={theme}
         onToggleTheme={handleToggleTheme}
       />
@@ -242,6 +274,7 @@ function App() {
           disabled={streaming}
           streaming={streaming}
           onStop={handleStop}
+          prompts={prompts}
         />
       </main>
 
@@ -258,6 +291,15 @@ function App() {
           settings={mascot}
           onChange={setMascot}
           onClose={() => setShowMascotSettings(false)}
+        />
+      )}
+
+      {showPromptLib && (
+        <PromptLibrary
+          prompts={prompts}
+          onSave={handleSavePrompt}
+          onDelete={handleDeletePrompt}
+          onClose={() => setShowPromptLib(false)}
         />
       )}
     </div>
