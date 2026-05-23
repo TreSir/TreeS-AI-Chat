@@ -43,18 +43,6 @@ function Sidebar({ sessions, activeId, collapsed, onToggleCollapse, onSelect, on
 
       {/* Footer actions */}
       <div className="sidebar-footer">
-        <button className="btn-sidebar-action" onClick={onToggleSettings} title="人设配置">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" />
-            <path d="M12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
-            <line x1="12" y1="2" x2="12" y2="4" />
-            <line x1="12" y1="20" x2="12" y2="22" />
-            <line x1="2" y1="12" x2="4" y2="12" />
-            <line x1="20" y1="12" x2="22" y2="12" />
-          </svg>
-          {!collapsed && <span>人设配置</span>}
-        </button>
-
         <button className="btn-sidebar-action" onClick={onToggleMascot} title="精灵设置">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="10" r="3" />

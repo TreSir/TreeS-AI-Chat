@@ -20,6 +20,21 @@ function loadMascot() {
 }
 function saveMascot(s) { localStorage.setItem('ai-chat-mascot', JSON.stringify(s)) }
 
+const PRESETS = [
+  { label: '默认', prompt: '' },
+  { label: '代码助手', prompt: '你是一个资深的编程专家，用简洁清晰的方式回答技术问题，给出可运行的代码示例。' },
+  { label: '翻译官', prompt: '你是一个专业翻译，用户输入中文你翻译成英文，输入英文翻译成中文，只输出翻译结果。' },
+  { label: '段子手', prompt: '你是一个幽默风趣的段子手，回答要轻松搞笑，多用梗和俏皮话。' },
+  { label: '知识讲师', prompt: '你是一个耐心的老师，用通俗易懂的方式解释复杂概念，多用比喻和例子。' },
+]
+
+function getPersonaName(prompt) {
+  if (!prompt) return ''
+  const preset = PRESETS.find((p) => p.prompt === prompt)
+  if (preset) return preset.label
+  return prompt.length > 12 ? prompt.slice(0, 12) + '…' : prompt
+}
+
 function createSession() {
   return {
     id: Date.now().toString(),
@@ -180,20 +195,10 @@ function App() {
       <main className="main">
         <header className="app-header">
           <div className="header-left">
-            <h1>AI Chat</h1>
+            <h1>{activeSession?.systemPrompt ? getPersonaName(activeSession.systemPrompt) : 'AI Chat'}</h1>
           </div>
           <div className="header-right">
-            {activeSession?.systemPrompt ? (
-              <span
-                className="badge persona-badge"
-                title={activeSession.systemPrompt}
-                onClick={() => setShowSettings(true)}
-              >
-                已设人设
-              </span>
-            ) : (
-              <span className="badge">DeepSeek</span>
-            )}
+            <span className="badge">DeepSeek</span>
             <button
               className="btn-header-icon"
               onClick={() => setShowSettings(true)}
