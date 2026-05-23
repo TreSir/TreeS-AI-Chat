@@ -199,6 +199,15 @@ function App() {
           </div>
           <div className="header-right">
             <span className="badge">DeepSeek</span>
+            {activeSession?.systemPrompt && (
+              <span
+                className="badge persona-badge"
+                title={activeSession.systemPrompt}
+                onClick={() => setShowSettings(true)}
+              >
+                已设人设
+              </span>
+            )}
             <button
               className="btn-header-icon"
               onClick={() => setShowSettings(true)}
