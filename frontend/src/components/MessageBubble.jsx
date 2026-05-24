@@ -39,11 +39,17 @@ function CodeBlock({ code, lang }) {
 
 function processMarkdown(text) {
   let html = text.trim()
-  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
+  // Headings (before line break conversion)
+  html = html.replace(/^###\s*(.+)$/gm, '<h3>$1</h3>')
+  html = html.replace(/^##\s*(.+)$/gm, '<h2>$1</h2>')
+  html = html.replace(/^#\s*(.+)$/gm, '<h1>$1</h1>')
+  // Inline formatting
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+  // Unordered lists (before \n → <br/>)
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>')
+  html = html.replace(/((?:<li>.*<\/li>\n?)+)/g, (match) => '<ul>' + match.replace(/\n/g, '') + '</ul>')
+  // Line breaks
   html = html.replace(/\n/g, '<br/>')
   return html
 }
