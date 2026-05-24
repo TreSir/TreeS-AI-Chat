@@ -9,7 +9,7 @@ const SUGGESTIONS = [
   '今天心情不太好，讲个笑话吧',
 ]
 
-function ChatWindow({ messages, onSend, onRegenerate, streaming }) {
+function ChatWindow({ messages, onSend, onRegenerate, onEdit, streaming }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
@@ -48,6 +48,7 @@ function ChatWindow({ messages, onSend, onRegenerate, streaming }) {
           content={msg.content}
           isLast={i === messages.length - 1}
           onRegenerate={() => onRegenerate(i)}
+          onEdit={(newText) => onEdit(i, newText)}
           streaming={streaming}
         />
       ))}

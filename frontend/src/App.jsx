@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import ChatWindow from './components/ChatWindow'
 import ChatInput from './components/ChatInput'
 import Sidebar from './components/Sidebar'
@@ -7,35 +7,10 @@ import MascotSettings from './components/MascotSettings'
 import Mascot from './components/Mascot'
 import PromptLibrary from './components/PromptLibrary'
 import { createChatSender } from './api'
-import { loadSessions, saveSessions, loadActiveId, saveActiveId, loadTheme, saveTheme } from './utils/storage'
+import { loadSessions, saveSessions, loadActiveId, saveActiveId, loadTheme, saveTheme, loadPrompts, savePrompts, loadMascot, saveMascot } from './utils/storage'
+import { PRESETS } from './constants'
 
 const sender = createChatSender()
-
-const DEFAULT_MASCOT = { visible: true, color: 'violet', shape: 'blob', size: 'md', speechLang: 'zh-CN' }
-
-function loadMascot() {
-  try {
-    const raw = localStorage.getItem('ai-chat-mascot')
-    return raw ? { ...DEFAULT_MASCOT, ...JSON.parse(raw) } : DEFAULT_MASCOT
-  } catch { return DEFAULT_MASCOT }
-}
-function saveMascot(s) { localStorage.setItem('ai-chat-mascot', JSON.stringify(s)) }
-
-function loadPrompts() {
-  try {
-    const raw = localStorage.getItem('ai-chat-prompts')
-    return raw ? JSON.parse(raw) : []
-  } catch { return [] }
-}
-function savePrompts(p) { localStorage.setItem('ai-chat-prompts', JSON.stringify(p)) }
-
-const PRESETS = [
-  { label: '默认', prompt: '' },
-  { label: '代码助手', prompt: '你是一个资深的编程专家，用简洁清晰的方式回答技术问题，给出可运行的代码示例。' },
-  { label: '翻译官', prompt: '你是一个专业翻译，用户输入中文你翻译成英文，输入英文翻译成中文，只输出翻译结果。' },
-  { label: '段子手', prompt: '你是一个幽默风趣的段子手，回答要轻松搞笑，多用梗和俏皮话。' },
-  { label: '知识讲师', prompt: '你是一个耐心的老师，用通俗易懂的方式解释复杂概念，多用比喻和例子。' },
-]
 
 function getPersonaName(prompt) {
   if (!prompt) return ''
@@ -65,27 +40,16 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [prompts, setPrompts] = useState(() => loadPrompts())
   const [showPromptLib, setShowPromptLib] = useState(false)
+  const [webSearch, setWebSearch] = useState(false)
 
-  useEffect(() => {
-    saveSessions(sessions)
-  }, [sessions])
-
-  useEffect(() => {
-    saveActiveId(activeId)
-  }, [activeId])
-
+  useEffect(() => { saveSessions(sessions) }, [sessions])
+  useEffect(() => { saveActiveId(activeId) }, [activeId])
   useEffect(() => {
     saveTheme(theme)
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
-
-  useEffect(() => {
-    saveMascot(mascot)
-  }, [mascot])
-
-  useEffect(() => {
-    savePrompts(prompts)
-  }, [prompts])
+  useEffect(() => { saveMascot(mascot) }, [mascot])
+  useEffect(() => { savePrompts(prompts) }, [prompts])
 
   const activeSession = sessions.find((s) => s.id === activeId) || null
 
@@ -136,14 +100,22 @@ function App() {
           })
         },
         onDone: () => setStreaming(false),
+        webSearch,
       }
     )
-  }, [ensureSession, updateSession])
+  }, [ensureSession, updateSession, webSearch])
 
   const handleStop = useCallback(() => {
     sender.stop()
     setStreaming(false)
   }, [])
+
+  const handleEditMessage = useCallback((msgIndex, newText) => {
+    if (!activeSession) return
+    const trimmed = activeSession.messages.slice(0, msgIndex)
+    updateSession(activeSession.id, (s) => ({ ...s, messages: trimmed }))
+    handleSend(newText, trimmed)
+  }, [activeSession, updateSession, handleSend])
 
   const handleRegenerate = useCallback((msgIndex) => {
     if (!activeSession) return
@@ -165,9 +137,7 @@ function App() {
     setActiveId(s.id)
   }
 
-  const handleSelectSession = (id) => {
-    setActiveId(id)
-  }
+  const handleSelectSession = (id) => setActiveId(id)
 
   const handleDeleteSession = (id) => {
     setSessions((prev) => {
@@ -264,6 +234,7 @@ function App() {
           messages={activeSession?.messages || []}
           onSend={handleSend}
           onRegenerate={handleRegenerate}
+          onEdit={handleEditMessage}
           streaming={streaming}
         />
 
@@ -275,6 +246,8 @@ function App() {
           streaming={streaming}
           onStop={handleStop}
           prompts={prompts}
+          webSearch={webSearch}
+          onToggleWebSearch={() => setWebSearch((w) => !w)}
         />
       </main>
 
