@@ -1,11 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import hljs from 'highlight.js'
 
+function highlightCode(code, lang) {
+  try {
+    if (lang && hljs.getLanguage(lang)) {
+      return hljs.highlight(code, { language: lang, ignoreIllegals: true })
+    }
+  } catch {}
+  return hljs.highlightAuto(code)
+}
+
 function CodeBlock({ code, lang }) {
   const [copied, setCopied] = useState(false)
-  const result = lang
-    ? hljs.highlight(code, { language: lang })
-    : hljs.highlightAuto(code)
+  const result = highlightCode(code, lang)
   const highlighted = result.value
   const displayLang = lang || result.language || 'text'
 
@@ -30,21 +37,39 @@ function CodeBlock({ code, lang }) {
   )
 }
 
+function processMarkdown(text) {
+  let html = text.trim()
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>')
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>')
+  html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>')
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+  html = html.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+  html = html.replace(/\n/g, '<br/>')
+  return html
+}
+
 function renderContent(text) {
   if (!text) return null
-  const parts = text.split(/(```\w*\n[\s\S]*?\n```)/g)
 
-  return parts.map((part, i) => {
-    const codeMatch = part.match(/^```(\w*)\n([\s\S]*?)\n```$/)
-    if (codeMatch) {
-      const lang = codeMatch[1] || ''
-      return <CodeBlock key={i} code={codeMatch[2]} lang={lang} />
-    }
-    if (!part.trim()) return null
-    const withBold = part.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    return withBold.split('\n\n').filter(Boolean).map((p, j) => (
-      <p key={`${i}-${j}`} dangerouslySetInnerHTML={{ __html: p.replace(/\n/g, '<br/>') }} />
-    ))
+  const codeRegex = /```(\w*)\r?\n([\s\S]*?)\r?\n```/g
+  const parts = []
+  let last = 0
+  let m
+
+  while ((m = codeRegex.exec(text)) !== null) {
+    if (m.index > last) parts.push({ t: 'text', c: text.slice(last, m.index) })
+    parts.push({ t: 'code', lang: m[1] || '', code: m[2].trimEnd() })
+    last = m.index + m[0].length
+  }
+  if (last < text.length) parts.push({ t: 'text', c: text.slice(last) })
+
+  return parts.map((p, i) => {
+    if (p.t === 'code') return <CodeBlock key={`c-${i}`} code={p.code} lang={p.lang} />
+    return p.c.split(/\n{2,}/).filter(Boolean).map((block, j) => {
+      const html = processMarkdown(block)
+      const Tag = /^<h[123]/.test(html) ? 'div' : 'p'
+      return <Tag key={`t-${i}-${j}`} className="md-block" dangerouslySetInnerHTML={{ __html: html }} />
+    })
   })
 }
 
