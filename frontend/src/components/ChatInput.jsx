@@ -1,20 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
 import VoiceButton from './VoiceButton'
 
-function ChatInput({ onSend, disabled, streaming, onStop, prompts }) {
+function ChatInput({ onSend, disabled, streaming, onStop, prompts, webSearch, onToggleWebSearch }) {
   const [input, setInput] = useState('')
-  const [slashQuery, setSlashQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [selectedIdx, setSelectedIdx] = useState(0)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const inputRef = useRef(null)
 
-  // Detect / slash command
   useEffect(() => {
     const match = input.match(/^\/(\S*)$/)
     if (match && prompts.length > 0) {
       const query = match[1].toLowerCase()
-      setSlashQuery(query)
       const filtered = prompts
         .filter((p) => p.name.toLowerCase().includes(query))
         .slice(0, 6)
@@ -76,6 +73,18 @@ function ChatInput({ onSend, disabled, streaming, onStop, prompts }) {
       )}
       <form className="chat-input" onSubmit={handleSubmit}>
         <VoiceButton onResult={(text) => setInput((prev) => prev + text)} />
+        <button
+          type="button"
+          className={`btn-web-search ${webSearch ? 'active' : ''}`}
+          onClick={onToggleWebSearch}
+          title={webSearch ? '已开启联网搜索' : '点击开启联网搜索'}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </button>
         <input
           ref={inputRef}
           type="text"

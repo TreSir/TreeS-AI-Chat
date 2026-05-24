@@ -40,14 +40,15 @@ Prod: api.js uses VITE_API_URL env var, falls back to hardcoded Render URL
 
 ## State & Storage (localStorage)
 
-All persisted on client side, no server DB:
+All persisted on client side, no server DB. All helpers live in `utils/storage.js`:
 
-| Key | Data | Handled in |
+| Key | Data | Shape |
 |---|---|---|
-| `ai-chat-sessions` | `[{id, title, messages, systemPrompt, createdAt}]` | `utils/storage.js` |
-| `ai-chat-active` | Active session ID string | `utils/storage.js` |
-| `ai-chat-theme` | `"dark"` / `"light"` | `utils/storage.js` |
-| `ai-chat-mascot` | `{visible, color, shape, size}` | inline in `App.jsx` |
+| `ai-chat-sessions` | Sessions array | `[{id, title, messages, systemPrompt, createdAt}]` |
+| `ai-chat-active` | Active session ID | `string` |
+| `ai-chat-theme` | Theme | `"dark"` / `"light"` |
+| `ai-chat-mascot` | Mascot settings | `{visible, color, shape, size, speechLang}` |
+| `ai-chat-prompts` | Prompt templates | `[{id, name, content}]` |
 
 State lifted to `App.jsx` with `useState` seeded from localStorage; `useEffect` persists on change.
 
@@ -56,25 +57,50 @@ State lifted to `App.jsx` with `useState` seeded from localStorage; `useEffect` 
 ```
 App
 ├── Sidebar (collapsible, 248→56px)
-│   ├── Session list (new/switch/delete, localStorage)
-│   └── Footer: Settings, Mascot, Theme toggle (all SVG icons)
+│   ├── Session list (new/switch/delete)
+│   └── Footer: PromptLib, Mascot, Theme toggle buttons (SVG icons)
 ├── Main
-│   ├── AppHeader (title, persona badge, clear button)
+│   ├── AppHeader (persona name / title, persona badge, clear button)
 │   ├── ChatWindow (empty state with suggestion chips / message list)
 │   │   └── MessageBubble (Markdown code blocks, **bold**, copy, regenerate)
-│   ├── Mascot (draggable, click interaction with sparkles + speech bubbles)
-│   └── ChatInput (text, voice via Web Speech API, send/stop)
+│   ├── Mascot (draggable, click sparkles, drag-to-speak TTS, idle breathing)
+│   └── ChatInput (text, voice, slash commands, web search toggle, send/stop)
 ├── SettingsModal (AI persona system prompt, presets)
-└── MascotSettings (color, shape, size, visibility, live preview)
+├── MascotSettings (color, shape, size, visibility, speech language, live preview)
+└── PromptLibrary (CRUD for /name prompt templates, search/filter)
 ```
 
+## Shared Constants
+
+`frontend/src/constants.js` — single source of truth for:
+- `COLORS` (13 gradient entries), `SHAPES` (10 shape entries), `SIZES` (3), `LANGS` (10)
+- `PRESETS` (5 AI persona presets), `MASCOT_MESSAGES` (click speech array)
+- `earColor(color)` — maps color key to cat ear fill
+- `findByValue(arr, value, fallbackIdx)` — lookup helper used by both Mascot and MascotSettings
+
 ## Key Patterns
+
+**Prompt library + slash commands**: PromptLibrary modal manages `/name` templates (CRUD, localStorage). ChatInput detects `^/(\S*)$` regex on input, filters prompts by name, shows dropdown. Arrow keys navigate, Enter inserts full prompt content. Escape closes dropdown.
+
+**Mascot drag-to-speak TTS**: Dragging the mascot over `.bubble` elements triggers `SpeechSynthesisUtterance` in the selected language. Uses two refs to track state:
+- `readingElRef` — which DOM element is being read (preserved across drag moves for dedup)
+- `readingRef` — boolean, whether reading is active (checked on move-away to stop)
+- `hasMoved` ref — distinguishes click (< 3px) from drag; click plays random message, drag reads bubbles
+- Reading continues after mouse release; stops only when dragged away from bubble or speech ends
+- `stopReading()` cancels synthesis and sets `readingRef = false` without clearing `readingElRef`
 
 **Message regeneration**: `handleRegenerate` finds the last user message before the clicked AI message, trims session messages to that point, passes trimmed array directly to `handleSend(text, baseMessages)` to avoid stale state.
 
 **Theme**: CSS variables scoped to `[data-theme="dark"]` / `[data-theme="light"]` on `<html>`. All colors use `var(--*)` tokens. Light/dark share identical selectors, just different variable values.
 
-**Mascot customization**: `13` gradient colors, `10` shapes (border-radius variants + cat ears), `3` sizes. Settings modal has live animated preview. Eye pupils track mouse via `mousemove`.
+**Mascot customization**: 13 gradient colors, 10 shapes (border-radius variants + cat ears), 3 sizes, 10 speech languages. Settings modal has live animated preview. Eye pupils track mouse via `mousemove`.
+
+**Mascot animations**: Three animation states driven by CSS classes on `.mascot-wrap`:
+- `.idle` — slow breathing scale pulse (3.5s cycle) after 5s of no interaction; reset on click/drag
+- `.dragging` — eyes squint to lines (pupils hidden), mouth becomes a pulsing circle
+- `.reading` — body bounces, mouth animates in rapid talk cycle (0.25s), green "朗读中" bubble pulses
+
+**Web search toggle**: Globe icon button in ChatInput toggles `webSearch` boolean in App state. Sent as `{webSearch: true/false}` in POST body to `/api/chat`. Backend can use this flag to inject search-augmented system instructions or call a search API.
 
 **Voice input**: Web Speech API (`SpeechRecognition`), `interimResults: true` shows real-time text bubble, `requestAnimationFrame` drives sound-wave bars.
 

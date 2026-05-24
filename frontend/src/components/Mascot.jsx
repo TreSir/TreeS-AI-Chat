@@ -1,64 +1,37 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-
-const MESSAGES = [
-  '你好呀！', '我在呢~', '有什么想问的吗？', '嘿嘿~', '戳我干嘛！', '❤', '✨', '今天天气真好~',
-]
-
-const COLOR_MAP = {
-  violet: 'linear-gradient(135deg, #a5b4fc 0%, #818cf8 30%, #6366f1 100%)',
-  pink: 'linear-gradient(135deg, #fbcfe8 0%, #f9a8d4 30%, #f472b6 100%)',
-  blue: 'linear-gradient(135deg, #bae6fd 0%, #7dd3fc 30%, #38bdf8 100%)',
-  green: 'linear-gradient(135deg, #bbf7d0 0%, #86efac 30%, #4ade80 100%)',
-  orange: 'linear-gradient(135deg, #fed7aa 0%, #fdba74 30%, #fb923c 100%)',
-  dark: 'linear-gradient(135deg, #94a3b8 0%, #64748b 30%, #475569 100%)',
-  sunset: 'linear-gradient(135deg, #fbbf24 0%, #fb923c 40%, #f472b6 100%)',
-  ocean: 'linear-gradient(135deg, #22d3ee 0%, #3b82f6 50%, #6366f1 100%)',
-  aurora: 'linear-gradient(135deg, #34d399 0%, #818cf8 50%, #c084fc 100%)',
-  rosegold: 'linear-gradient(135deg, #fda4af 0%, #fb7185 40%, #fbbf24 100%)',
-  galaxy: 'linear-gradient(135deg, #6366f1 0%, #a855f7 40%, #ec4899 100%)',
-  forest: 'linear-gradient(135deg, #86efac 0%, #22c55e 30%, #0d9488 100%)',
-  rainbow: 'linear-gradient(135deg, #fca5a5 0%, #fde047 25%, #86efac 50%, #7dd3fc 75%, #c084fc 100%)',
-}
-
-const SHAPE_MAP = {
-  blob: '50% 50% 50% 50% / 40% 40% 60% 60%',
-  cat: '50% 50% 50% 50% / 55% 55% 45% 45%',
-  round: '50%',
-  egg: '45% 45% 55% 55% / 55% 55% 45% 45%',
-  drop: '50% 0 50% 50% / 30% 0 70% 70%',
-  soft: '40% 60% 55% 45% / 55% 45% 50% 50%',
-  cloud: '55% 55% 30% 30% / 65% 65% 35% 35%',
-  bean: '60% 40% 50% 50% / 40% 40% 60% 60%',
-  square: '22%',
-  pill: '99px',
-}
-
-const SIZE_MAP = { sm: 0.75, md: 1, lg: 1.35 }
-
-function earColor(c) {
-  if (c === 'pink') return '#f472b6'
-  if (c === 'blue') return '#38bdf8'
-  if (c === 'green') return '#4ade80'
-  if (c === 'orange') return '#fb923c'
-  if (c === 'dark') return '#64748b'
-  return '#818cf8'
-}
+import { COLORS, SHAPES, SIZES, MASCOT_MESSAGES, earColor, findByValue } from '../constants'
 
 function Mascot({ settings }) {
   const { color, shape, size, visible, speechLang } = settings
-  const baseSize = 56 * (SIZE_MAP[size] || 1)
+  const s = findByValue(SHAPES, shape, 0)
+  const c = findByValue(COLORS, color, 0)
+  const sc = findByValue(SIZES, size, 1)
+  const baseSize = 56 * sc.scale
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [clicked, setClicked] = useState(false)
   const [sparkles, setSparkles] = useState([])
   const [speech, setSpeech] = useState('')
   const [reading, setReading] = useState(false)
+  const [idle, setIdle] = useState(false)
   const eyesRef = useRef([])
   const dragRef = useRef({ startX: 0, startY: 0, origX: 0, origY: 0 })
   const speechTimer = useRef(null)
   const initRef = useRef(false)
   const readingElRef = useRef(null)
+  const idleTimer = useRef(null)
   const isCat = shape === 'cat'
+
+  const resetIdle = useCallback(() => {
+    setIdle(false)
+    clearTimeout(idleTimer.current)
+    idleTimer.current = setTimeout(() => setIdle(true), 5000)
+  }, [])
+
+  useEffect(() => {
+    resetIdle()
+    return () => clearTimeout(idleTimer.current)
+  }, [resetIdle])
 
   useEffect(() => {
     if (initRef.current) return
@@ -93,11 +66,12 @@ function Mascot({ settings }) {
 
   const handlePointerDown = useCallback((e) => {
     e.preventDefault()
+    resetIdle()
     setDragging(true)
     setSpeech('')
     hasMoved.current = false
     dragRef.current = { startX: e.clientX, startY: e.clientY, origX: pos.x, origY: pos.y }
-  }, [pos])
+  }, [pos, resetIdle])
 
   useEffect(() => {
     if (!dragging) return
@@ -148,6 +122,7 @@ function Mascot({ settings }) {
 
     const handleUp = () => {
       setDragging(false)
+      resetIdle()
     }
 
     window.addEventListener('pointermove', handleMove)
@@ -160,6 +135,7 @@ function Mascot({ settings }) {
 
   const handleClick = useCallback(() => {
     if (hasMoved.current || reading) return
+    resetIdle()
     setClicked(true)
     setTimeout(() => setClicked(false), 400)
     const newSparkles = Array.from({ length: 8 }, (_, i) => ({
@@ -169,17 +145,17 @@ function Mascot({ settings }) {
     }))
     setSparkles((prev) => [...prev, ...newSparkles])
     setTimeout(() => setSparkles((prev) => prev.filter((s) => !newSparkles.includes(s))), 600)
-    const msg = MESSAGES[Math.floor(Math.random() * MESSAGES.length)]
+    const msg = MASCOT_MESSAGES[Math.floor(Math.random() * MASCOT_MESSAGES.length)]
     setSpeech(msg)
     clearTimeout(speechTimer.current)
     speechTimer.current = setTimeout(() => setSpeech(''), 2200)
-  }, [reading])
+  }, [reading, resetIdle])
 
   if (!visible) return null
 
   return (
     <div
-      className={`mascot-wrap ${dragging ? 'dragging' : ''} ${clicked ? 'bounced' : ''} ${reading ? 'reading' : ''}`}
+      className={`mascot-wrap ${dragging ? 'dragging' : ''} ${clicked ? 'bounced' : ''} ${reading ? 'reading' : ''} ${idle && !dragging && !reading ? 'idle' : ''}`}
       style={{ left: pos.x, top: pos.y }}
     >
       {sparkles.map((s) => (
@@ -217,8 +193,8 @@ function Mascot({ settings }) {
           style={{
             width: baseSize,
             height: baseSize,
-            borderRadius: SHAPE_MAP[shape] || SHAPE_MAP.blob,
-            background: COLOR_MAP[color] || COLOR_MAP.violet,
+            borderRadius: s.radius,
+            background: c.css,
           }}
         >
           <div className="mascot-face" style={{ top: baseSize * 0.32 }}>

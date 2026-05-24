@@ -3,14 +3,14 @@ const API_BASE = import.meta.env.VITE_API_URL || 'https://trees-ai-chat.onrender
 export function createChatSender() {
   let controller = null
 
-  const send = async (messages, system, { onToken, onDone }) => {
+  const send = async (messages, system, { onToken, onDone, webSearch }) => {
     controller = new AbortController()
 
     try {
       const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, system }),
+        body: JSON.stringify({ messages, system, webSearch }),
         signal: controller.signal,
       })
 
